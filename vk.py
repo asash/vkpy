@@ -2,6 +2,7 @@ import urllib.parse
 import requests
 import sys
 import json
+import mmh3
 from requests.exceptions import ReadTimeout
 import networkx as nx
 from pymongo import MongoClient
@@ -13,12 +14,15 @@ table = db.vk_cache
 
 """module implements some vk.com api methods wrappers"""
 
+def vk_hash(string):
+    return mmh3.hash64(string)[0]
+
 def base_request(method, params, print_error=False, timeout=1):
     url = "http://api.vk.com/method/%s" % method
-    doc = table.find_one({"_id": hash(url + json.dumps(params))})
+    doc = table.find_one({"_id": vk_hash(url + json.dumps(params))})
     if doc is not None:
         return doc['response']
-    doc = {"_id": hash(url + json.dumps(params))}
+    doc = {"_id": vk_hash(url + json.dumps(params))}
     while True:
         try:
             response = requests.post(url, data=dict(params), timeout=timeout)
