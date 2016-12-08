@@ -3,7 +3,10 @@ import requests
 import sys
 import json
 import mmh3
+import copy
+from multiprocessing import Pool
 from requests.exceptions import ReadTimeout
+import subprocess
 import networkx as nx
 from pymongo import MongoClient
 from tqdm import tqdm
@@ -49,6 +52,23 @@ def get_friends(user_id):
         return []
     else:
         return res
+
+def get_group_subscribers(group_id):
+    result = set()
+    offset = 0
+    count = 1000
+    while True:
+        sys.stderr.write("group {} offset {}\n".format(group_id, offset))
+        prev_len = len(result)
+        res = base_request("groups.getMembers", [("offset", offset), ("count", count), ("gid", str(group_id))])
+        offset += count
+        result = result.union(set(res['users']))
+        if (len(result) == prev_len):
+            break
+    return list(result)
+
+
+    
 
 def get_users_info(users_list, fields=None, show_pbar=None):
     result = {}
