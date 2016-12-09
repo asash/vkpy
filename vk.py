@@ -53,6 +53,11 @@ def get_friends(user_id):
     else:
         return res
 
+def get_friends_multiprocess(user_ids, pool_size=20):
+    pool = Pool(pool_size)
+    result = pool.map(get_friends, user_ids)
+    return result
+
 def get_group_subscribers(group_id):
     result = set()
     offset = 0
