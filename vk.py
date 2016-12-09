@@ -25,6 +25,7 @@ def base_request(method, params, print_error=False, timeout=1):
     doc = table.find_one({"_id": vk_hash(url + json.dumps(params))})
     if doc is not None:
         return doc['response']
+    return None
     doc = {"_id": vk_hash(url + json.dumps(params))}
     while True:
         try:
@@ -53,17 +54,20 @@ def get_friends(user_id):
     else:
         return res
 
-def get_friends_multiprocess(user_ids, pool_size=20):
+def get_friends_map_multiprocess(user_ids, pool_size=20):
     pool = Pool(pool_size)
     result = pool.map(get_friends, user_ids)
+    return result
+
+def get_friends_map(user_ids):
+    result = list(map(get_friends, user_ids))
     return result
 
 def get_group_subscribers(group_id):
     result = set()
     offset = 0
-    count = 1000
+    count = 100
     while True:
-        sys.stderr.write("group {} offset {}\n".format(group_id, offset))
         prev_len = len(result)
         res = base_request("groups.getMembers", [("offset", offset), ("count", count), ("gid", str(group_id))])
         offset += count
